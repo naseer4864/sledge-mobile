@@ -1,0 +1,39 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Expo / build output
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+
+# Native build artifacts
+android/build/
+ios/build/
+*.apk
+*.aab
+*.ipa
+
+# Tests / coverage
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.*
+
+# Temp / OS
+tmp/
+*.tmp
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/

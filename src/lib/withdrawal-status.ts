@@ -1,0 +1,15 @@
+export const WITHDRAWAL_STATUS: Record<string, { label: string; color: string; note?: string }> = {
+  requested: { label: 'Requested', color: '#F79009', note: 'Waiting to be processed.' },
+  pending_review: { label: 'Under review', color: '#F79009', note: 'Being reviewed before broadcasting.' },
+  approved: { label: 'Approved', color: '#12B76A', note: 'Approved and queued for broadcast.' },
+  reserved: { label: 'Reserved', color: '#F79009', note: 'Funds reserved, awaiting submission.' },
+  submitting: { label: 'Submitting', color: '#F79009', note: 'Being sent to the network.' },
+  submission_unknown: { label: 'Verifying', color: '#F79009', note: 'Submission outcome uncertain — verifying safely, no resubmit.' },
+  broadcast: { label: 'Broadcast', color: '#F79009', note: 'Sent to the network, awaiting confirmations.' },
+  confirming: { label: 'Confirming', color: '#F79009', note: 'Waiting for required confirmations.' },
+  completed: { label: 'Completed', color: '#12B76A' },
+  failed: { label: 'Failed', color: '#F04438', note: 'The transfer failed.' },
+  rejected: { label: 'Rejected', color: '#F04438', note: 'The request was declined.' },
+  cancelled: { label: 'Cancelled', color: '#667085' },
+  reconciliation_required: { label: 'Reconciling', color: '#F79009', note: 'Outcome being reconciled — no action needed.' },
+};
