@@ -85,7 +85,7 @@ describe('orders', () => {
 });
 
 describe('open/history classification', () => {
-  const ALL = ['quoted','reserved','submitting','submission_unknown','accepted_by_provider','partially_filled','filled','settling','completed','rejected','cancelled','failed'];
+  const ALL = ['quoted','reserved','submitting','submission_unknown','accepted_by_provider','partially_filled','filled','settling','pending_review','cancellation_pending','completed','rejected','cancelled','failed'];
   it('every backend status lands in exactly one tab', () => {
     for (const s of ALL) expect(typeof OPEN_ORDER_STATUSES.has(s)).toBe('boolean');
     expect(ALL.filter((s) => !OPEN_ORDER_STATUSES.has(s)).sort()).toEqual(['cancelled','completed','failed','rejected']);
@@ -98,7 +98,8 @@ describe('open/history classification', () => {
 
 describe('cancellation', () => {
   it('cancellable set matches intended statuses', () => {
-    expect([...CANCELLABLE_STATUSES].sort()).toEqual(['accepted_by_provider','quoted','reserved','submitting']);
+    // mirrors backend customer-cancel eligibility exactly (quoted|reserved)
+    expect([...CANCELLABLE_STATUSES].sort()).toEqual(['quoted','reserved']);
     expect(CANCELLABLE_STATUSES.has('completed')).toBe(false);
     expect(CANCELLABLE_STATUSES.has('partially_filled')).toBe(false);
   });

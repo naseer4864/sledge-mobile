@@ -14,6 +14,7 @@ const STATUS: Record<string, { label: string; color: string }> = {
   submitting: { label: 'Submitting', color: '#F79009' }, submission_unknown: { label: 'Verifying', color: '#F79009' },
   accepted_by_provider: { label: 'Processing', color: '#F79009' }, partially_filled: { label: 'Partial', color: '#F79009' },
   filled: { label: 'Filled', color: '#12B76A' }, settling: { label: 'Settling', color: '#F79009' },
+  pending_review: { label: 'In review', color: '#F79009' }, cancellation_pending: { label: 'Cancelling', color: '#F79009' },
   completed: { label: 'Completed', color: '#12B76A' }, rejected: { label: 'Rejected', color: '#F04438' },
   cancelled: { label: 'Cancelled', color: '#667085' }, failed: { label: 'Failed', color: '#F04438' },
 };

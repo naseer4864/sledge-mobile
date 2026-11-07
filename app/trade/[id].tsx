@@ -18,6 +18,8 @@ const STATUS: Record<string, { label: string; color: string; note?: string }> = 
   partially_filled: { label: 'Partially filled', color: '#F79009', note: 'Part of the order executed — the rest is in progress.' },
   filled: { label: 'Filled', color: '#12B76A', note: 'Fully executed, awaiting settlement.' },
   settling: { label: 'Settling', color: '#F79009', note: 'Settling the trade.' },
+  pending_review: { label: 'In review', color: '#F79009', note: 'Held for review — nothing has executed yet.' },
+  cancellation_pending: { label: 'Cancelling', color: '#F79009', note: 'Cancellation in progress — not final yet.' },
   completed: { label: 'Completed', color: '#12B76A' },
   rejected: { label: 'Rejected', color: '#F04438', note: 'The order was declined.' },
   cancelled: { label: 'Cancelled', color: '#667085' },

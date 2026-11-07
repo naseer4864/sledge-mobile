@@ -54,8 +54,11 @@ export const useOrders = () => useQuery({ queryKey: ['trading-orders'], queryFn:
 const TERMINAL = new Set(['completed', 'rejected', 'cancelled', 'failed']);
 export const useOrder = (id?: string) => useQuery({ queryKey: ['trading-order', id], queryFn: () => order(id!), enabled: !!id, staleTime: 10_000, refetchInterval: (q) => (q.state.data && TERMINAL.has(q.state.data.status) ? false : 20_000) });
 
-// Status lifecycle shared by UI + tests.
-export const OPEN_ORDER_STATUSES = new Set(['quoted', 'reserved', 'submitting', 'submission_unknown', 'accepted_by_provider', 'partially_filled', 'filled', 'settling']);
-export const CANCELLABLE_STATUSES = new Set(['quoted', 'reserved', 'submitting', 'accepted_by_provider']);
+// Status lifecycle shared by UI + tests. pending_review (risk hold) and
+// cancellation_pending (cancel in flight) are non-terminal — they stay "open".
+export const OPEN_ORDER_STATUSES = new Set(['quoted', 'reserved', 'submitting', 'submission_unknown', 'accepted_by_provider', 'partially_filled', 'filled', 'settling', 'pending_review', 'cancellation_pending']);
+// Must mirror the backend customer-cancel eligibility exactly — offering
+// cancel in states the API rejects only produces guaranteed 409s.
+export const CANCELLABLE_STATUSES = new Set(['quoted', 'reserved']);
 export const cancelOrder = (id: string) =>
   api(`/api/v1/trading/orders/${id}/cancel`, { method: 'POST', schema: z.object({ orderId: z.string(), status: z.string() }) });
