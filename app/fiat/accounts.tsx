@@ -1,36 +1,43 @@
 import { TopFade } from '../../src/components/top-fade';
-import { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Landmark, Plus, Star } from 'lucide-react-native';
+import { Landmark, Plus, Star } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../src/providers/theme';
 import { useSavedAccounts, setDefaultAccount, disableAccount, type SavedAccount } from '../../src/services/fiat';
 import { Button } from '../../src/components/ui/button';
+import { elevation } from '../../src/theme/elevation';
+import { ScreenHeader } from '../../src/components/screen-header';
 import { LoadingState, EmptyState, ErrorState } from '../../src/components/states';
 import { ApiError } from '../../src/services/api';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 const STATUS: Record<string, { label: string; color: string }> = {
   verified: { label: 'Verified', color: '#12B76A' },
   pending_verification: { label: 'Pending', color: '#F79009' },
   under_review: { label: 'Under review', color: '#F79009' },
   verification_failed: { label: 'Failed', color: '#F04438' },
-  disabled: { label: 'Disabled', color: '#667085' },
+  disabled: { label: 'Disabled', color: '#758780' },
 };
 
 export default function SavedAccounts() {
   const { colors } = useTheme();
   const qc = useQueryClient();
   const d = useSavedAccounts();
-  const [err, setErr] = useState('');
+  const { show, modal } = useFeedback();
 
   const refresh = async () => { await d.refetch(); };
-  const done = () => { setErr(''); qc.invalidateQueries({ queryKey: ['saved-bank-accounts'] }); };
-  const fail = (e: unknown) => setErr(e instanceof ApiError ? e.message : 'Action failed');
-
-  const setDefault = useMutation({ mutationFn: setDefaultAccount, onSuccess: done, onError: fail });
-  const disable = useMutation({ mutationFn: disableAccount, onSuccess: done, onError: fail });
+  const setDefault = useMutation({
+    mutationFn: setDefaultAccount,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['saved-bank-accounts'] }); show({ kind: 'success', title: 'Default account updated', message: 'This account will be selected by default for eligible withdrawals.' }); },
+    onError: (e) => show({ kind: 'error', title: 'Could not update account', message: e instanceof ApiError ? e.message : 'Please try again.' }),
+  });
+  const disable = useMutation({
+    mutationFn: disableAccount,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['saved-bank-accounts'] }); show({ kind: 'success', title: 'Account disabled', message: 'The saved bank account has been removed from your active accounts.' }); },
+    onError: (e) => show({ kind: 'error', title: 'Could not disable account', message: e instanceof ApiError ? e.message : 'Please try again.' }),
+  });
   const busy = setDefault.isPending || disable.isPending;
 
   const confirmDisable = (a: SavedAccount) =>
@@ -47,16 +54,12 @@ export default function SavedAccounts() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-        <Pressable accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))} style={{ padding: 6 }}><ArrowLeft size={20} color={colors.text} /></Pressable>
-        <Text style={{ flex: 1, fontSize: 20, fontWeight: '800', color: colors.text }}>Bank accounts</Text>
-        <Pressable accessibilityLabel="Add bank account" onPress={() => router.push('/fiat/add-account' as never)}
-          style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#00B894', alignItems: 'center', justifyContent: 'center' }}>
-          <Plus size={18} color="#fff" />
-        </Pressable>
-      </View>
-      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={refresh} tintColor="#00B894" />} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
-        {err ? <Text style={{ fontSize: 13, color: '#F04438', marginBottom: 10 }}>{err}</Text> : null}
+      <ScreenHeader
+        title="Bank accounts"
+        subtitle="Manage saved withdrawal accounts"
+        right={<Pressable accessibilityRole="button" accessibilityLabel="Add bank account" onPress={() => router.push('/fiat/add-account' as never)} style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}><Plus size={18} color="#FFFFFF" /></Pressable>}
+      />
+      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={refresh} tintColor="#00B887" />} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         {d.isLoading ? <LoadingState /> : d.error ? <ErrorState description="Could not load bank accounts." onRetry={refresh} /> :
           d.data?.length ? (
             <View style={{ gap: 10 }}>
@@ -64,10 +67,10 @@ export default function SavedAccounts() {
                 const s = STATUS[a.status] ?? { label: a.status, color: colors.textMuted };
                 const eligible = a.status === 'verified';
                 return (
-                  <View key={a.customerBankAccountId} style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16 }}>
+                  <View key={a.customerBankAccountId} style={{ borderRadius: 18, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 16, ...elevation.surface }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#00B89414', alignItems: 'center', justifyContent: 'center' }}>
-                        <Landmark size={18} color="#00B894" />
+                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#00B88714', alignItems: 'center', justifyContent: 'center' }}>
+                        <Landmark size={18} color="#00B887" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -94,10 +97,11 @@ export default function SavedAccounts() {
             </View>
           ) : (
             <EmptyState title="No bank accounts" description="Add and verify a Nigerian bank account to withdraw NGN."
-              icon={<Landmark size={26} color="#00B894" />} />
+              icon={<Landmark size={26} color="#00B887" />} />
           )}
         <Button label="Add a bank account" size="lg" style={{ marginTop: 16 }} onPress={() => router.push('/fiat/add-account' as never)} />
       </ScrollView>
+      {modal}
     </SafeAreaView>
   );
 }

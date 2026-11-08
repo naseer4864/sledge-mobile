@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AuthScreen } from '../../src/components/auth/screen';
+import { AuthBackLink } from '../../src/components/auth/back-link';
 import { PasswordInput } from '../../src/components/auth/password-input';
 import { Input } from '../../src/components/ui/input';
 import { Button } from '../../src/components/ui/button';
 import { api, ApiError } from '../../src/services/api';
 import { z } from 'zod';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 const schema = z.object({ token: z.string().min(10, 'Enter the reset token'), newPassword: z.string().min(8, 'At least 8 characters').max(128) });
 
 export default function ResetPassword() {
+  const { show, modal } = useFeedback();
   const [form, setForm] = useState({ token: '', newPassword: '', confirm: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -21,8 +24,12 @@ export default function ResetPassword() {
     if (!parsed.success) { setErrors(Object.fromEntries(parsed.error.issues.map((i) => [i.path[0] as string, i.message]))); return; }
     if (form.newPassword !== form.confirm) { setErrors({ confirm: 'Passwords do not match' }); return; }
     setErrors({}); setBusy(true);
-    try { await api('/api/v1/auth/password/reset', { method: 'POST', body: { token: form.token, newPassword: form.newPassword }, skipAuth: true }); setDone(true); }
-    catch (e) { setErrors({ token: e instanceof ApiError ? e.message : 'Reset failed' }); }
+    try {
+      await api('/api/v1/auth/password/reset', { method: 'POST', body: { token: form.token, newPassword: form.newPassword }, skipAuth: true });
+      setDone(true);
+      show({ kind: 'success', title: 'Password updated', message: 'Your password has been changed. Sign in with your new password.' });
+    }
+    catch (e) { show({ kind: 'error', title: 'Password not changed', message: e instanceof ApiError ? e.message : 'Reset failed. Check the token and try again.' }); }
     finally { setBusy(false); }
   };
 
@@ -42,9 +49,8 @@ export default function ResetPassword() {
             <Button label="Reset password" size="lg" loading={busy} onPress={submit} />
           </>
         )}
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))}>
-          <Text style={{ textAlign: 'center', color: '#00B894', fontSize: 14 }}>Back</Text>
-        </Pressable>
+        <AuthBackLink label="Back to sign in" onPress={() => router.replace('/(auth)/login' as never)} />
+        {modal}
       </View>
     </AuthScreen>
   );

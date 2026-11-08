@@ -5,11 +5,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: { emerald: '#00B894', navy: '#101B2D', blue: '#4778F5' },
-        bg: { DEFAULT: '#F5F7FA', dark: '#0D1622' },
-        surface: { DEFAULT: '#FFFFFF', dark: '#17263B', muted: '#FAFBFC', 'muted-dark': '#1C2D45' },
-        text: { DEFAULT: '#172033', muted: '#667085', 'dark': '#F4F7FB', 'dark-muted': '#B8C5D6' },
-        border: { DEFAULT: '#E4E9F0', dark: '#2A3B52' },
+        brand: { emerald: '#00B887', 'emerald-bright': '#00D6A0', forest: '#004C3F', 'forest-deep': '#003D32', mint: '#C9F5E8', 'mint-dark': '#064E3B' },
+        bg: { DEFAULT: '#F4F8F7', dark: '#071714' },
+        surface: { DEFAULT: '#FFFFFF', dark: '#10231F', muted: '#F4F8F7', 'muted-dark': '#064E3B' },
+        text: { DEFAULT: '#14231F', muted: '#758780', 'dark': '#F4FAF7', 'dark-muted': '#91A69E' },
+        border: { DEFAULT: '#E1EBE7', dark: '#29463E' },
         success: '#12B76A', warning: '#F79009', danger: '#F04438',
       },
       borderRadius: { md: '10px', lg: '14px', xl: '18px' },

@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Rect, Circle, Path, Defs, RadialGradient, LinearGradient as SvgGrad, Stop, Ellipse, G } from 'react-native-svg';
 import { router } from 'expo-router';
-import { Eye, EyeOff, ArrowDown, ArrowUpRight, Landmark, ShieldCheck, ArrowRight, ChevronRight, Clock3, ReceiptText, Headset, Gift, PiggyBank } from 'lucide-react-native';
+import { Eye, EyeOff, ArrowDown, ArrowUpRight, Landmark, ShieldCheck, ArrowRight, ChevronRight, Clock3, ReceiptText, Headset, Gift, PiggyBank, Bell } from 'lucide-react-native';
 import { useTheme } from '../../src/providers/theme';
 import { useSession } from '../../src/providers/session';
 import { useDashboard } from '../../src/services/dashboard';
 import { useWallets, useWalletBalances, useAssets } from '../../src/services/wallets';
 import { useBankingAccounts } from '../../src/services/fiat';
+import { useUnreadCount } from '../../src/services/notifications';
 import { formatAtomic } from '../../src/lib/money';
 import { LoadingState, ErrorState } from '../../src/components/states';
 
@@ -26,13 +27,13 @@ function HeaderGlow() {
     <Svg width="100%" height={640} preserveAspectRatio="xMidYMin slice" style={{ position: 'absolute', top: 0, left: 0, right: 0 }} pointerEvents="none">
       <Defs>
         <RadialGradient id="g1" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#0A4A38" stopOpacity="0.95" /><Stop offset="0.65" stopColor="#0A4A38" stopOpacity="0.55" /><Stop offset="1" stopColor="#0A4A38" stopOpacity="0" />
+          <Stop offset="0" stopColor="#004C3F" stopOpacity="0.95" /><Stop offset="0.65" stopColor="#004C3F" stopOpacity="0.55" /><Stop offset="1" stopColor="#004C3F" stopOpacity="0" />
         </RadialGradient>
         <RadialGradient id="g2" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#0EA87E" stopOpacity="0.5" /><Stop offset="0.7" stopColor="#0EA87E" stopOpacity="0.22" /><Stop offset="1" stopColor="#0EA87E" stopOpacity="0" />
+          <Stop offset="0" stopColor="#00B887" stopOpacity="0.5" /><Stop offset="0.7" stopColor="#00B887" stopOpacity="0.22" /><Stop offset="1" stopColor="#00B887" stopOpacity="0" />
         </RadialGradient>
         <RadialGradient id="g3" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#00C9A7" stopOpacity="0.3" /><Stop offset="1" stopColor="#00C9A7" stopOpacity="0" />
+          <Stop offset="0" stopColor="#00D6A0" stopOpacity="0.3" /><Stop offset="1" stopColor="#00D6A0" stopOpacity="0" />
         </RadialGradient>
       </Defs>
       {/* far-right teal halo */}
@@ -55,13 +56,13 @@ function BannerArt() {
     <Svg width="100%" height="100%" viewBox="0 0 320 110" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', top: 0, left: 0 }} pointerEvents="none">
       <Defs>
         <RadialGradient id="bv1" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#00483C" stopOpacity="1" /><Stop offset="0.7" stopColor="#00483C" stopOpacity="0.55" /><Stop offset="1" stopColor="#00483C" stopOpacity="0" />
+          <Stop offset="0" stopColor="#004C3F" stopOpacity="1" /><Stop offset="0.7" stopColor="#004C3F" stopOpacity="0.55" /><Stop offset="1" stopColor="#004C3F" stopOpacity="0" />
         </RadialGradient>
         <RadialGradient id="bv2" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#00C9A7" stopOpacity="0.5" /><Stop offset="0.7" stopColor="#00C9A7" stopOpacity="0.2" /><Stop offset="1" stopColor="#00C9A7" stopOpacity="0" />
+          <Stop offset="0" stopColor="#00D6A0" stopOpacity="0.5" /><Stop offset="0.7" stopColor="#00D6A0" stopOpacity="0.2" /><Stop offset="1" stopColor="#00D6A0" stopOpacity="0" />
         </RadialGradient>
         <RadialGradient id="bv3" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#00B889" stopOpacity="0.6" /><Stop offset="1" stopColor="#00B889" stopOpacity="0" />
+          <Stop offset="0" stopColor="#00B887" stopOpacity="0.6" /><Stop offset="1" stopColor="#00B887" stopOpacity="0" />
         </RadialGradient>
       </Defs>
       {/* oversized dark disc clipping the right edge */}
@@ -83,19 +84,19 @@ function WalletArt() {
     <Svg width={150} height={130} viewBox="0 0 150 130">
       <Defs>
         <SvgGrad id="wbody" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#17C8A0" /><Stop offset="0.5" stopColor="#0FA884" /><Stop offset="1" stopColor="#0B7A62" />
+          <Stop offset="0" stopColor="#00D6A0" /><Stop offset="0.5" stopColor="#00B887" /><Stop offset="1" stopColor="#003D32" />
         </SvgGrad>
         <SvgGrad id="wback" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#0B8A6E" /><Stop offset="1" stopColor="#07503F" />
+          <Stop offset="0" stopColor="#004C3F" /><Stop offset="1" stopColor="#003D32" />
         </SvgGrad>
         <SvgGrad id="wflap" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#2BDBB4" /><Stop offset="1" stopColor="#12A57F" />
+          <Stop offset="0" stopColor="#00D6A0" /><Stop offset="1" stopColor="#00B887" />
         </SvgGrad>
         <RadialGradient id="wglow" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#00E0A4" stopOpacity="0.45" /><Stop offset="1" stopColor="#00E0A4" stopOpacity="0" />
+          <Stop offset="0" stopColor="#00D6A0" stopOpacity="0.45" /><Stop offset="1" stopColor="#00D6A0" stopOpacity="0" />
         </RadialGradient>
         <SvgGrad id="coin" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FFD166" /><Stop offset="1" stopColor="#F5A623" />
+          <Stop offset="0" stopColor="#C9F5E8" /><Stop offset="1" stopColor="#00D6A0" />
         </SvgGrad>
       </Defs>
       <Ellipse cx={95} cy={112} rx={55} ry={12} fill="url(#wglow)" />
@@ -104,11 +105,11 @@ function WalletArt() {
         <Rect x={30} y={52} width={96} height={58} rx={14} fill="url(#wbody)" />
         <Rect x={30} y={52} width={96} height={12} rx={6} fill="rgba(255,255,255,0.22)" />
         <Rect x={96} y={68} width={30} height={24} rx={8} fill="url(#wflap)" />
-        <Circle cx={104} cy={80} r={4.5} fill="#0B5C49" />
+        <Circle cx={104} cy={80} r={4.5} fill="#003D32" />
       </G>
       <Circle cx={108} cy={30} r={17} fill="url(#coin)" />
       <Circle cx={108} cy={30} r={17} stroke="rgba(255,255,255,0.5)" strokeWidth={2} fill="none" />
-      <Path d="M101 22 h14 M101 30 h14 M104 22 v17 M111 22 v17" stroke="#8A5A00" strokeWidth={2.2} strokeLinecap="round" fill="none" />
+      <Path d="M101 22 h14 M101 30 h14 M104 22 v17 M111 22 v17" stroke="#004C3F" strokeWidth={2.2} strokeLinecap="round" fill="none" />
     </Svg>
   );
 }
@@ -122,6 +123,7 @@ export default function Home() {
   const balances = useWalletBalances(wallets.data?.[0]?.walletId);
   const assets = useAssets();
   const accts = useBankingAccounts();
+  const unread = useUnreadCount();
   const ngnAsset = assets.data?.find((x) => x.type === 'fiat');
   const ngnRow = ngnAsset ? balances.data?.find((b) => b.assetId === ngnAsset.assetId) : undefined;
   const ngnAcct = accts.data?.find((x) => x.status === 'active') ?? accts.data?.[0];
@@ -133,9 +135,9 @@ export default function Home() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
-      <LinearGradient colors={['#002F2B', '#0B3D2E', '#0E5941', colors.bg]} locations={[0, 0.38, 0.7, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 620 }} />
+      <LinearGradient colors={['#004C3F', '#003D32', '#F4F8F7', colors.bg]} locations={[0, 0.38, 0.7, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 620 }} />
       <HeaderGlow />
-      <ScrollView refreshControl={<RefreshControl refreshing={d.refreshing} onRefresh={d.refresh} tintColor="#00B894" />} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
+      <ScrollView refreshControl={<RefreshControl refreshing={d.refreshing} onRefresh={d.refresh} tintColor="#00B887" />} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingTop: 12 }}>
@@ -143,25 +145,40 @@ export default function Home() {
             <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>{greeting},</Text>
             <Text style={{ fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.5 }}>{firstName} 👋</Text>
           </View>
-          <Pressable accessibilityLabel="Account" onPress={() => router.push('/account' as never)}
-            style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#00B894', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}>
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>{firstName[0]?.toUpperCase()}</Text>
-            <View style={{ position: 'absolute', right: 1, bottom: 1, width: 13, height: 13, borderRadius: 7, backgroundColor: '#00E0A4', borderWidth: 2.5, borderColor: '#0E5941' }} />
-          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={unread.data ? `Notifications, ${unread.data} unread` : 'Notifications'}
+              onPress={() => router.push('/notifications' as never)}
+              style={{ width: 46, height: 46, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Bell size={20} color="#FFFFFF" strokeWidth={2.1} />
+              {unread.data && unread.data > 0 ? (
+                <View style={{ position: 'absolute', right: -5, top: -5, minWidth: 19, height: 19, borderRadius: 10, paddingHorizontal: 4, backgroundColor: '#00D6A0', borderWidth: 2, borderColor: '#003D32', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#003D32', fontSize: 9, fontWeight: '900' }}>{unread.data > 99 ? '99+' : unread.data}</Text>
+                </View>
+              ) : null}
+            </Pressable>
+            <Pressable accessibilityLabel="Account" onPress={() => router.push('/account' as never)}
+              style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#00B887', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>{firstName[0]?.toUpperCase()}</Text>
+              <View style={{ position: 'absolute', right: 1, bottom: 1, width: 13, height: 13, borderRadius: 7, backgroundColor: '#00D6A0', borderWidth: 2.5, borderColor: '#003D32' }} />
+            </Pressable>
+          </View>
         </View>
 
         {/* Balance card */}
         <View style={{ marginHorizontal: 22, marginTop: 22 }}>
-          <LinearGradient colors={['#0F6B4C', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          <LinearGradient colors={['#004C3F', '#00B887']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={{ borderRadius: 24, padding: 22, overflow: 'hidden', ...SHADOW, shadowOpacity: 0.18, elevation: 6 }}>
             {/* decorative curves inside the card — clipped by overflow:hidden */}
             <Svg width="100%" height="100%" viewBox="0 0 340 160" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', top: 0, left: 0 }} pointerEvents="none">
               <Defs>
                 <RadialGradient id="cb1" cx="0.5" cy="0.5" r="0.5">
-                  <Stop offset="0" stopColor="#00E0A4" stopOpacity="0.4" /><Stop offset="1" stopColor="#00E0A4" stopOpacity="0" />
+                  <Stop offset="0" stopColor="#00D6A0" stopOpacity="0.4" /><Stop offset="1" stopColor="#00D6A0" stopOpacity="0" />
                 </RadialGradient>
                 <RadialGradient id="cb2" cx="0.5" cy="0.5" r="0.5">
-                  <Stop offset="0" stopColor="#07503F" stopOpacity="0.8" /><Stop offset="1" stopColor="#07503F" stopOpacity="0" />
+                  <Stop offset="0" stopColor="#003D32" stopOpacity="0.8" /><Stop offset="1" stopColor="#003D32" stopOpacity="0" />
                 </RadialGradient>
               </Defs>
               {/* big emerald curve emerging bottom-right */}
@@ -197,8 +214,8 @@ export default function Home() {
           {QA.map((a) => (
             <Pressable key={a.label} onPress={() => router.push(a.href as never)} accessibilityLabel={a.label}
               style={{ flex: 1, alignItems: 'center', gap: 9, paddingVertical: 16, borderRadius: 18, backgroundColor: colors.surface, ...SHADOW }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#00B89414', alignItems: 'center', justifyContent: 'center' }}>
-                <a.icon size={19} strokeWidth={2.6} color="#00B894" />
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#00B88714', alignItems: 'center', justifyContent: 'center' }}>
+                <a.icon size={19} strokeWidth={2.6} color="#00B887" />
               </View>
               <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text }}>{a.label}</Text>
             </Pressable>
@@ -208,9 +225,9 @@ export default function Home() {
         {/* Verify banner */}
         {!kycDone ? (
           <View style={{ marginHorizontal: 22, marginTop: 18 }}>
-            <LinearGradient colors={['#003B32', '#005B45']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' }}>
+            <LinearGradient colors={['#003D32', '#004C3F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' }}>
               <BannerArt />
-              <ShieldCheck size={34} strokeWidth={2.6} color="#00E0A4" />
+              <ShieldCheck size={34} strokeWidth={2.6} color="#00D6A0" />
               <View style={{ width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 14 }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>Verify your account</Text>
@@ -218,8 +235,8 @@ export default function Home() {
               </View>
               <Pressable onPress={() => router.push('/kyc' as never)} accessibilityLabel="Verify"
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#0B3D2E' }}>Verify</Text>
-                <ArrowRight size={14} strokeWidth={2.8} color="#0B3D2E" />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#003D32' }}>Verify</Text>
+                <ArrowRight size={14} strokeWidth={2.8} color="#003D32" />
               </Pressable>
             </LinearGradient>
           </View>
@@ -228,8 +245,8 @@ export default function Home() {
         {/* NGN bank card */}
         <Pressable onPress={() => router.push('/fiat/receive' as never)} accessibilityLabel="NGN bank account"
           style={{ marginHorizontal: 22, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 18, backgroundColor: colors.surface, padding: 16, ...SHADOW }}>
-          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#00B89414', alignItems: 'center', justifyContent: 'center' }}>
-            <Landmark size={20} strokeWidth={2.6} color="#00B894" />
+          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#00B88714', alignItems: 'center', justifyContent: 'center' }}>
+            <Landmark size={20} strokeWidth={2.6} color="#00B887" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>NGN bank account</Text>
@@ -246,15 +263,15 @@ export default function Home() {
               <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Recent activity</Text>
             </View>
             <Pressable onPress={() => router.push('/withdraw/history' as never)} accessibilityLabel="See all activity" style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#00B894' }}>See all</Text>
-              <ArrowRight size={14} strokeWidth={2.8} color="#00B894" />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#00B887' }}>See all</Text>
+              <ArrowRight size={14} strokeWidth={2.8} color="#00B887" />
             </Pressable>
           </View>
           <View style={{ marginTop: 12, borderRadius: 18, backgroundColor: colors.surface, ...SHADOW }}>
             {d.loading ? <LoadingState /> : d.error ? <ErrorState description="Could not load." onRetry={d.refresh} /> : (
               <View style={{ alignItems: 'center', paddingVertical: 30 }}>
-                <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#00B89412', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                  <ReceiptText size={26} strokeWidth={2.4} color="#00B894" />
+                <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#00B88712', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <ReceiptText size={26} strokeWidth={2.4} color="#00B887" />
                 </View>
                 <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>No activity</Text>
                 <Text style={{ marginTop: 4, fontSize: 12.5, color: colors.textMuted }}>Deposits and orders will appear here.</Text>
@@ -266,7 +283,7 @@ export default function Home() {
 
       {/* Support FAB */}
       <Pressable onPress={() => router.push('/account' as never)} accessibilityLabel="Support"
-        style={{ position: 'absolute', right: 20, bottom: 96, width: 52, height: 52, borderRadius: 26, backgroundColor: '#00B894', alignItems: 'center', justifyContent: 'center', ...SHADOW, shadowOpacity: 0.25, elevation: 8 }}>
+        style={{ position: 'absolute', right: 20, bottom: 96, width: 52, height: 52, borderRadius: 26, backgroundColor: '#00B887', alignItems: 'center', justifyContent: 'center', ...SHADOW, shadowOpacity: 0.25, elevation: 8 }}>
         <Headset size={22} strokeWidth={2.5} color="#fff" />
       </Pressable>
     </SafeAreaView>

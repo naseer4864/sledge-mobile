@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTheme } from '../../src/providers/theme';
@@ -14,6 +13,9 @@ import { Input } from '../../src/components/ui/input';
 import { ApiError } from '../../src/services/api';
 import { LoadingState, ErrorState } from '../../src/components/states';
 import { TopFade } from '../../src/components/top-fade';
+import { elevation } from '../../src/theme/elevation';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 const fmt = (s?: string | null) => (s ? new Date(s).toLocaleDateString() : '—');
 
@@ -21,11 +23,11 @@ export default function PlanDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const qc = useQueryClient();
+  const { show, modal } = useFeedback();
   const p = useQuery({ queryKey: ['savings-plan', id], queryFn: () => plan(id!), enabled: !!id });
   const tx = useQuery({ queryKey: ['savings-txns', id], queryFn: () => planTxns(id!), enabled: !!id });
   const a = useAssets();
   const [amount, setAmount] = useState('');
-  const [err, setErr] = useState('');
   const [idem] = useState(() => Crypto.randomUUID());
   const d = p.data;
   const asset = d ? a.data?.find((x) => x.assetId === d.assetId) : undefined;
@@ -34,8 +36,13 @@ export default function PlanDetail() {
   const act = useMutation({
     mutationFn: (kind: 'fund' | 'withdraw' | 'redeem') =>
       kind === 'fund' ? fundPlan(id!, amount, idem) : kind === 'withdraw' ? withdrawPlan(id!, amount, idem) : redeemPlan(id!, amount, idem),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['savings-plan', id] }); qc.invalidateQueries({ queryKey: ['savings-plans'] }); qc.invalidateQueries({ queryKey: ['savings-txns', id] }); qc.invalidateQueries({ queryKey: ['wallet-balances'] }); setAmount(''); },
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Action failed'),
+    onSuccess: (_result, kind) => {
+      qc.invalidateQueries({ queryKey: ['savings-plan', id] }); qc.invalidateQueries({ queryKey: ['savings-plans'] }); qc.invalidateQueries({ queryKey: ['savings-txns', id] }); qc.invalidateQueries({ queryKey: ['wallet-balances'] });
+      setAmount('');
+      const title = kind === 'fund' ? 'Funds added' : kind === 'withdraw' ? 'Withdrawal requested' : 'Funds redeemed';
+      show({ kind: 'success', title, message: 'Your savings activity has been updated.' });
+    },
+    onError: (e) => show({ kind: 'error', title: 'Savings action failed', message: e instanceof ApiError ? e.message : 'Could not complete this action. Please try again.' }),
   });
 
   if (p.isLoading) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}><LoadingState /></SafeAreaView>;
@@ -51,12 +58,9 @@ export default function PlanDetail() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-        <Pressable accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))} style={{ padding: 6 }}><ArrowLeft size={20} color="#fff" /></Pressable>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', textTransform: 'capitalize' }}>{d.productType.replace('_', ' ')}</Text>
-      </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
-        <View style={{ borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16, gap: 10 }}>
+      <ScreenHeader title={d.productType.replace('_', ' ')} subtitle={`${asset?.symbol ?? d.assetId} savings plan`} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <View style={{ borderRadius: 20, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 18, gap: 12, ...elevation.surface }}>
           {rows.map(([k, v]) => (
             <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
               <Text style={{ fontSize: 13, color: colors.textMuted }}>{k}</Text>
@@ -68,12 +72,12 @@ export default function PlanDetail() {
         {d.status === 'active' || d.status === 'funded' ? (
           <View style={{ marginTop: 14 }}>
             <Input label={`Amount (${asset?.symbol ?? ''})`} placeholder="0.00" keyboardType="decimal-pad" value={amount} onChangeText={setAmount} />
-            <Button label="Add funds" size="lg" style={{ marginTop: 10 }} loading={act.isPending} disabled={!amount || act.isPending} onPress={() => { setErr(''); act.mutate('fund'); }} />
-            {d.productType === 'flexible' ? <Button label="Withdraw" variant="outline" size="lg" style={{ marginTop: 8 }} disabled={!amount || act.isPending} onPress={() => { setErr(''); act.mutate('withdraw'); }} /> : null}
+            <Button label="Add funds" size="lg" style={{ marginTop: 10 }} loading={act.isPending} disabled={!amount || act.isPending} onPress={() => act.mutate('fund')} />
+            {d.productType === 'flexible' ? <Button label="Withdraw" variant="outline" size="lg" style={{ marginTop: 8 }} disabled={!amount || act.isPending} onPress={() => act.mutate('withdraw')} /> : null}
           </View>
         ) : null}
         {d.status === 'matured' ? (
-          <Button label="Redeem funds" size="lg" style={{ marginTop: 14 }} loading={act.isPending} disabled={act.isPending} onPress={() => { setErr(''); act.mutate('redeem'); }} />
+          <Button label="Redeem funds" size="lg" style={{ marginTop: 14 }} loading={act.isPending} disabled={act.isPending} onPress={() => act.mutate('redeem')} />
         ) : null}
         {d.productType === 'fixed_term' && (d.status === 'active' || d.status === 'locked') ? (
           <View style={{ marginTop: 14, borderRadius: 12, borderWidth: 1, borderColor: '#F79009', backgroundColor: '#F790090D', padding: 12 }}>
@@ -82,7 +86,6 @@ export default function PlanDetail() {
             </Text>
           </View>
         ) : null}
-        {err ? <Text style={{ marginTop: 10, color: '#F04438', fontSize: 13 }}>{err}</Text> : null}
         {tx.data?.length ? (
           <View style={{ marginTop: 18 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Activity</Text>
@@ -95,6 +98,7 @@ export default function PlanDetail() {
           </View>
         ) : null}
       </ScrollView>
+      {modal}
     </SafeAreaView>
   );
 }

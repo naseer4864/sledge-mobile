@@ -20,6 +20,17 @@ export async function login(email: string, password: string) {
   return res;
 }
 
+export async function verifyEmailCode(token: string) {
+  const res = await api<z.infer<typeof AuthTokensSchema>>('/api/v1/auth/email/verify', {
+    method: 'POST',
+    body: { token },
+    schema: AuthTokensSchema,
+    skipAuth: true,
+  });
+  await setTokens(res.accessToken, res.refreshToken);
+  return me();
+}
+
 export const me = () => api<User>('/api/v1/auth/me', { schema: z.object({ customer: UserSchema }).transform((r) => r.customer) });
 export async function logout() {
   const { refreshToken } = await getTokens();

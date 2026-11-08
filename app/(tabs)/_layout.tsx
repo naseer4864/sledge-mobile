@@ -1,7 +1,20 @@
 import { Redirect, Tabs } from 'expo-router';
+import { View, type ColorValue } from 'react-native';
 import { House, Wallet, ArrowLeftRight, PiggyBank, UserRound } from 'lucide-react-native';
 import { colors as palette } from '../../src/theme/colors';
 import { useSession } from '../../src/providers/session';
+
+function TabIcon({ Icon, color, focused }: { Icon: typeof House; color: ColorValue; focused: boolean }) {
+  return (
+    <View style={{
+      width: 34, height: 28,
+      alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Icon size={21} color={color} strokeWidth={focused ? 2.5 : 1.9} />
+      {focused ? <View style={{ position: 'absolute', bottom: -2, width: 4, height: 4, borderRadius: 2, backgroundColor: color }} /> : null}
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const { state } = useSession();
@@ -11,22 +24,21 @@ export default function TabLayout() {
       headerShown: false,
       tabBarActiveTintColor: palette.brand.emerald,
       tabBarInactiveTintColor: '#98A2B3',
-      tabBarActiveBackgroundColor: '#00B89414',
-      tabBarItemStyle: { borderRadius: 20, marginHorizontal: 4, marginVertical: 8 },
-      tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      tabBarIconStyle: { marginTop: 2 },
+      tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+      tabBarItemStyle: { paddingTop: 5 },
+      tabBarIconStyle: { marginTop: 0 },
       tabBarStyle: {
-        position: 'absolute', bottom: 14, marginHorizontal: 16, height: 66,
-        borderRadius: 28, backgroundColor: '#FFFFFF', borderTopWidth: 0,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 14, elevation: 10,
-        borderWidth: 1, borderColor: '#E4E9F0', paddingTop: 2,
+        position: 'absolute', bottom: 14, marginHorizontal: 16, height: 68,
+        borderRadius: 24, backgroundColor: '#FFFFFF', borderTopWidth: 0,
+        shadowColor: '#003D32', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.13, shadowRadius: 18, elevation: 9,
+        borderWidth: 1, borderColor: '#FFFFFF', paddingTop: 0,
       },
     }}>
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ color, size }) => <House size={size} color={color} /> }} />
-      <Tabs.Screen name="wallet" options={{ title: 'Wallet', tabBarIcon: ({ color, size }) => <Wallet size={size} color={color} /> }} />
-      <Tabs.Screen name="trade" options={{ title: 'Trade', href: '/trade', tabBarIcon: ({ color, size }) => <ArrowLeftRight size={size} color={color} /> }} />
-      <Tabs.Screen name="savings" options={{ title: 'Savings', tabBarIcon: ({ color, size }) => <PiggyBank size={size} color={color} /> }} />
-      <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: ({ color, size }) => <UserRound size={size} color={color} /> }} />
+      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ color, focused }) => <TabIcon Icon={House} color={color} focused={focused} /> }} />
+      <Tabs.Screen name="wallet" options={{ title: 'Wallet', tabBarIcon: ({ color, focused }) => <TabIcon Icon={Wallet} color={color} focused={focused} /> }} />
+      <Tabs.Screen name="trade" options={{ title: 'Trade', tabBarIcon: ({ color, focused }) => <TabIcon Icon={ArrowLeftRight} color={color} focused={focused} /> }} />
+      <Tabs.Screen name="savings" options={{ title: 'Savings', tabBarIcon: ({ color, focused }) => <TabIcon Icon={PiggyBank} color={color} focused={focused} /> }} />
+      <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: ({ color, focused }) => <TabIcon Icon={UserRound} color={color} focused={focused} /> }} />
     </Tabs>
   );
 }

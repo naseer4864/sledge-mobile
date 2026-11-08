@@ -34,7 +34,7 @@ export const GC_STATUS: Record<string, { label: string; color: string; terminal?
   reserved: { label: 'Reserved', color: '#F79009' }, submission_pending: { label: 'Submitting', color: '#F79009' },
   submission_unknown: { label: 'Verifying', color: '#F79009' }, processing: { label: 'Processing', color: '#F79009' },
   completed: { label: 'Completed', color: '#12B76A', terminal: true }, failed: { label: 'Failed', color: '#F04438', terminal: true },
-  refund_pending: { label: 'Refund pending', color: '#F79009' }, refunded: { label: 'Refunded', color: '#667085', terminal: true },
+  refund_pending: { label: 'Refund pending', color: '#F79009' }, refunded: { label: 'Refunded', color: '#758780', terminal: true },
   case_open: { label: 'Under review', color: '#F79009' }, rejected: { label: 'Rejected', color: '#F04438', terminal: true },
 };
 const TERMINAL = new Set(Object.keys(GC_STATUS).filter((k) => GC_STATUS[k].terminal));

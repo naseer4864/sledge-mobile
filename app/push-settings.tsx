@@ -10,6 +10,7 @@ import { Button } from '../src/components/ui/button';
 import { ApiError } from '../src/services/api';
 import { LoadingState, ErrorState } from '../src/components/states';
 import { TopFade } from '../src/components/top-fade';
+import { useFeedback } from '../src/components/ui/feedback-modal';
 
 type Perm = 'unknown' | 'granted' | 'denied';
 
@@ -18,7 +19,7 @@ export default function PushSettings() {
   const qc = useQueryClient();
   const [perm, setPerm] = useState<Perm>('unknown');
   const [explained, setExplained] = useState(false);
-  const [result, setResult] = useState('');
+  const { show, modal } = useFeedback();
   const devices = usePushDevices();
   const prefs = useQuery({ queryKey: ['push-prefs'], queryFn: getPushPrefs });
   const [localPrefs, setLocalPrefs] = useState<Record<string, boolean>>({});
@@ -27,15 +28,17 @@ export default function PushSettings() {
     mutationFn: registerForPush,
     onSuccess: (r) => {
       setPerm(r.ok ? 'granted' : r.reason === 'denied' ? 'denied' : 'unknown');
-      setResult(r.ok ? 'Notifications enabled.' : r.reason === 'denied' ? 'Permission was denied.' : 'Push is unavailable in this build.');
       if (r.ok) qc.invalidateQueries({ queryKey: ['push-devices'] });
+      show(r.ok
+        ? { kind: 'success', title: 'Notifications enabled', message: 'This device can now receive important account updates.' }
+        : { kind: 'error', title: r.reason === 'denied' ? 'Permission denied' : 'Push unavailable', message: r.reason === 'denied' ? 'Allow notifications in your device settings to receive alerts.' : 'Push notifications are unavailable in this build.' });
     },
-    onError: () => setResult('Could not enable notifications.'),
+    onError: () => show({ kind: 'error', title: 'Could not enable notifications', message: 'Please try again or check your device settings.' }),
   });
   const save = useMutation({
     mutationFn: () => setPushPrefs(localPrefs),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['push-prefs'] }); setResult('Preferences saved.'); },
-    onError: (e) => setResult(e instanceof ApiError ? e.message : 'Save failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['push-prefs'] }); show({ kind: 'success', title: 'Preferences saved', message: 'Your notification preferences have been updated.' }); },
+    onError: (e) => show({ kind: 'error', title: 'Preferences not saved', message: e instanceof ApiError ? e.message : 'Please try saving again.' }),
   });
 
   const prefObj = (prefs.data ?? {}) as Record<string, unknown>;
@@ -53,9 +56,9 @@ export default function PushSettings() {
         {/* OS permission — distinct from backend prefs */}
         <View style={{ borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            {perm === 'granted' ? <Bell size={18} color="#00B894" /> : perm === 'denied' ? <BellOff size={18} color="#F04438" /> : <Bell size={18} color={colors.textMuted} />}
+            {perm === 'granted' ? <Bell size={18} color="#00B887" /> : perm === 'denied' ? <BellOff size={18} color="#F04438" /> : <Bell size={18} color={colors.textMuted} />}
             <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: colors.text }}>Device notifications</Text>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: perm === 'granted' ? '#00B894' : perm === 'denied' ? '#F04438' : colors.textMuted }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: perm === 'granted' ? '#00B887' : perm === 'denied' ? '#F04438' : colors.textMuted }}>
               {perm === 'granted' ? 'Enabled' : perm === 'denied' ? 'Denied' : 'Not set'}
             </Text>
           </View>
@@ -80,9 +83,9 @@ export default function PushSettings() {
 
         {/* Device registration — distinct from OS permission */}
         <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16 }}>
-          <Smartphone size={18} color={registered ? '#00B894' : colors.textMuted} />
+          <Smartphone size={18} color={registered ? '#00B887' : colors.textMuted} />
           <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: colors.text }}>Device registered</Text>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: registered ? '#00B894' : colors.textMuted }}>{registered ? `${registered} device${registered > 1 ? 's' : ''}` : 'Not registered'}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: registered ? '#00B887' : colors.textMuted }}>{registered ? `${registered} device${registered > 1 ? 's' : ''}` : 'Not registered'}</Text>
         </View>
 
         {/* Backend push preferences */}
@@ -94,7 +97,7 @@ export default function PushSettings() {
                 <Pressable key={k} onPress={() => setLocalPrefs({ ...localPrefs, [k]: !(localPrefs[k] ?? prefObj[k]) })}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: k === prefKeys[prefKeys.length - 1] ? 0 : 1, borderBottomColor: colors.border }}>
                   <Text style={{ flex: 1, fontSize: 14, color: colors.text, textTransform: 'capitalize' }}>{k.replace(/_/g, ' ')}</Text>
-                  <View style={{ width: 44, height: 24, borderRadius: 12, backgroundColor: (localPrefs[k] ?? prefObj[k]) ? '#00B894' : colors.border, justifyContent: 'center', paddingHorizontal: 3 }}>
+                  <View style={{ width: 44, height: 24, borderRadius: 12, backgroundColor: (localPrefs[k] ?? prefObj[k]) ? '#00B887' : colors.border, justifyContent: 'center', paddingHorizontal: 3 }}>
                     <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#fff', alignSelf: (localPrefs[k] ?? prefObj[k]) ? 'flex-end' : 'flex-start' }} />
                   </View>
                 </Pressable>
@@ -108,9 +111,8 @@ export default function PushSettings() {
           </View>
         )}
 
-        {result ? <Text style={{ marginTop: 12, fontSize: 13, textAlign: 'center', color: colors.textMuted }}>{result}</Text> : null}
-        
       </ScrollView>
+      {modal}
     </SafeAreaView>
   );
 }

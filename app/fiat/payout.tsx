@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, CheckCircle2, Clock3, Landmark } from 'lucide-react-native';
+import { CheckCircle2, Clock3, Landmark } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTheme } from '../../src/providers/theme';
@@ -13,6 +13,9 @@ import { Input } from '../../src/components/ui/input';
 import { Button } from '../../src/components/ui/button';
 import { LoadingState, EmptyState, ErrorState } from '../../src/components/states';
 import { ApiError } from '../../src/services/api';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { elevation } from '../../src/theme/elevation';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 type Step = 'details' | 'review' | 'done';
 const fmt = (s: string) => formatAtomic(s, 2); // NGN is 2dp — backend emits atomic kobo strings
@@ -28,6 +31,7 @@ export default function PayoutForm() {
   const [result, setResult] = useState<FiatPayout | null>(null);
   const [err, setErr] = useState('');
   const [idem] = useState(() => Crypto.randomUUID()); // idempotent submission — retries reuse this key
+  const { show, modal } = useFeedback();
 
   const eligible = (accounts.data ?? []).filter((a) => a.status === 'verified');
   const isQuoteExpired = () => !!quote && new Date(quote.expiresAt).getTime() <= Date.now(); // checked at press-time, not render
@@ -35,13 +39,16 @@ export default function PayoutForm() {
   const doQuote = useMutation({
     mutationFn: () => quoteBeneficiaryPayout(amount, dest!.customerBankAccountId),
     onSuccess: (q) => { setQuote(q); setStep('review'); },
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Could not get a quote'),
+    onError: (e) => show({ kind: 'error', title: 'Quote unavailable', message: e instanceof ApiError ? e.message : 'Could not get a payout quote. Please try again.' }),
   });
   const submit = useMutation({
     // quoteId pins the payout to this beneficiary+amount — the backend rejects beneficiary mismatches
     mutationFn: () => createBeneficiaryPayout({ amount, customerBankAccountId: dest!.customerBankAccountId, quoteId: quote?.quoteId, idempotencyKey: idem }),
-    onSuccess: (p) => { setResult(p); setStep('done'); qc.invalidateQueries({ queryKey: ['fiat-payouts'] }); },
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Withdrawal failed'),
+    onSuccess: (p) => {
+      setResult(p); setStep('done'); qc.invalidateQueries({ queryKey: ['fiat-payouts'] });
+      show({ kind: 'success', title: 'Withdrawal submitted', message: 'Your NGN payout request was submitted. Track its progress in payout history.' });
+    },
+    onError: (e) => show({ kind: 'error', title: 'Withdrawal not submitted', message: e instanceof ApiError ? e.message : 'Could not submit your payout. Please try again.' }),
   });
 
   const pickDest = (a: SavedAccount) => { setDest(a); setQuote(null); }; // beneficiary change → fresh quote required
@@ -50,11 +57,8 @@ export default function PayoutForm() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-          <Pressable accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))} style={{ padding: 6 }}><ArrowLeft size={20} color={colors.text} /></Pressable>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text }}>Withdraw NGN</Text>
-        </View>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
+        <ScreenHeader title="Withdraw NGN" subtitle="Send money to a saved bank account" />
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
           {step === 'details' && (
             <View style={{ gap: 16 }}>
               <View>
@@ -62,7 +66,7 @@ export default function PayoutForm() {
                 {accounts.isLoading ? <LoadingState /> : accounts.error ? <ErrorState description="Could not load bank accounts." onRetry={accounts.refetch} /> :
                   eligible.length === 0 ? (
                     <View style={{ gap: 12 }}>
-                      <EmptyState title="No verified account" description="Add and verify a Nigerian bank account before withdrawing." icon={<Landmark size={26} color="#00B894" />} />
+                      <EmptyState title="No verified account" description="Add and verify a Nigerian bank account before withdrawing." icon={<Landmark size={26} color="#00B887" />} />
                       <Button label="Add a bank account" variant="outline" size="lg" onPress={() => router.push('/fiat/add-account' as never)} />
                     </View>
                   ) : (
@@ -71,15 +75,15 @@ export default function PayoutForm() {
                         const sel = dest?.customerBankAccountId === a.customerBankAccountId;
                         return (
                           <Pressable key={a.customerBankAccountId} accessibilityLabel={`Withdraw to ${a.bankName}`} onPress={() => pickDest(a)}
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 12, borderWidth: 1.5, borderColor: sel ? '#00B894' : colors.border, backgroundColor: sel ? '#00B8940D' : colors.surface, padding: 14 }}>
-                            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#00B89414', alignItems: 'center', justifyContent: 'center' }}>
-                              <Landmark size={17} color="#00B894" />
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 12, borderWidth: 1.5, borderColor: sel ? '#00B887' : colors.border, backgroundColor: sel ? '#00B8870D' : colors.surface, padding: 14 }}>
+                            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#00B88714', alignItems: 'center', justifyContent: 'center' }}>
+                              <Landmark size={17} color="#00B887" />
                             </View>
                             <View style={{ flex: 1 }}>
                               <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{a.bankName}{a.isDefault ? ' · Default' : ''}</Text>
                               <Text style={{ fontSize: 12, color: colors.textMuted }}>{a.accountName} · {a.accountNumberMasked}</Text>
                             </View>
-                            {sel ? <CheckCircle2 size={18} color="#00B894" /> : null}
+                            {sel ? <CheckCircle2 size={18} color="#00B887" /> : null}
                           </Pressable>
                         );
                       })}
@@ -99,7 +103,7 @@ export default function PayoutForm() {
           )}
           {step === 'review' && quote && dest && (
             <View style={{ gap: 14 }}>
-              <View style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16, gap: 10 }}>
+              <View style={{ borderRadius: 22, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 18, gap: 12, ...elevation.surface }}>
                 {[['To', `${dest.accountName} · ${dest.accountNumberMasked}`], ['Bank', dest.bankName], ['Amount', `₦${fmt(quote.amountAtomic)}`], ['Fee', `₦${fmt(quote.feeAtomic)}`], ['Total debit', `₦${fmt(quote.totalReservedAtomic)}`]].map(([k, v]) => (
                   <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
                     <Text style={{ fontSize: 13, color: colors.textMuted }}>{k}</Text>
@@ -132,6 +136,7 @@ export default function PayoutForm() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+      {modal}
     </SafeAreaView>
   );
 }

@@ -6,6 +6,8 @@ import { useDeposits } from '../../src/services/deposits';
 import { useAssets } from '../../src/services/wallets';
 import { formatAtomic } from '../../src/lib/money';
 import { LoadingState, EmptyState, ErrorState } from '../../src/components/states';
+import { elevation } from '../../src/theme/elevation';
+import { ScreenHeader } from '../../src/components/screen-header';
 
 const STATUS: Record<string, { label: string; color: string }> = {
   pending: { label: 'Pending', color: '#F79009' },
@@ -25,15 +27,15 @@ export default function DepositHistory() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
-      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={async () => { await d.refetch(); }} tintColor="#00B894" />} contentContainerStyle={{ padding: 20 }}>
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.5 }}>Deposit history</Text>
+      <ScreenHeader title="Deposit history" subtitle="Inbound crypto activity" />
+      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={async () => { await d.refetch(); }} tintColor="#00B887" />} contentContainerStyle={{ padding: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View style={{ marginTop: 16, gap: 8 }}>
           {d.isLoading ? <LoadingState /> : d.error ? <ErrorState description="Could not load deposits." onRetry={d.refetch} /> :
             d.data?.length ? d.data.map((dep) => {
               const asset = map.get(dep.assetId);
               const s = STATUS[dep.status] ?? { label: dep.status, color: colors.textMuted };
               return (
-                <View key={dep.depositId} style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 14 }}>
+                <View key={dep.depositId} style={{ borderRadius: 18, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 16, ...elevation.surface }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View>
                       <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }}>{asset?.symbol ?? dep.assetId}</Text>

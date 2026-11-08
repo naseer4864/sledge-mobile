@@ -8,6 +8,16 @@
     "userInterfaceStyle": "light",
     "ios": { "supportsTablet": false, "bundleIdentifier": "dev.coin.mobile" },
     "android": { "package": "dev.coin.mobile" },
-    "plugins": ["expo-router", "expo-secure-store"]
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Sledge to upload identity verification documents.",
+          "cameraPermission": "Allow Sledge to capture your identity document and selfie."
+        }
+      ]
+    ]
   }
 }

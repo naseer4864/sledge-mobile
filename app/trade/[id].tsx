@@ -1,13 +1,18 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, RefreshCw } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { RefreshCw } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../src/providers/theme';
 import { useOrder, CANCELLABLE_STATUSES, cancelOrder } from '../../src/services/trades';
 import { useAssets } from '../../src/services/wallets';
 import { formatAtomic } from '../../src/lib/money';
 import { LoadingState, ErrorState } from '../../src/components/states';
+import { TopFade } from '../../src/components/top-fade';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { elevation } from '../../src/theme/elevation';
+import { ApiError } from '../../src/services/api';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 const STATUS: Record<string, { label: string; color: string; note?: string }> = {
   quoted: { label: 'Quoted', color: '#F79009', note: 'Quote accepted, awaiting execution.' },
@@ -22,7 +27,7 @@ const STATUS: Record<string, { label: string; color: string; note?: string }> = 
   cancellation_pending: { label: 'Cancelling', color: '#F79009', note: 'Cancellation in progress — not final yet.' },
   completed: { label: 'Completed', color: '#12B76A' },
   rejected: { label: 'Rejected', color: '#F04438', note: 'The order was declined.' },
-  cancelled: { label: 'Cancelled', color: '#667085' },
+  cancelled: { label: 'Cancelled', color: '#758780' },
   failed: { label: 'Failed', color: '#F04438', note: 'The order failed.' },
 };
 const fmt = (s?: string | null) => (s ? new Date(s).toLocaleString() : '—');
@@ -64,13 +69,10 @@ export default function OrderDetail() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-        <Pressable accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))} style={{ padding: 6 }}><ArrowLeft size={20} color={colors.text} /></Pressable>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text, flex: 1 }}>Order</Text>
-        <Pressable accessibilityLabel="Refresh status" onPress={() => o.refetch()} hitSlop={8}><RefreshCw size={18} color={colors.textMuted} /></Pressable>
-      </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
-        <View style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 16 }}>
+      <TopFade />
+      <ScreenHeader title="Order details" subtitle={d.pairId.toUpperCase()} right={<Pressable accessibilityLabel="Refresh status" onPress={() => o.refetch()} hitSlop={8}><RefreshCw size={18} color="#FFFFFF" /></Pressable>} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <View style={{ borderRadius: 22, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 18, ...elevation.surface }}>
           <Text style={{ fontSize: 13, fontWeight: '700', color: s.color, textTransform: 'uppercase' }}>{s.label}</Text>
           {s.note ? <Text style={{ marginTop: 4, fontSize: 12, color: colors.textMuted }}>{s.note}</Text> : null}
           <View style={{ marginTop: 14, gap: 10 }}>
@@ -90,14 +92,22 @@ export default function OrderDetail() {
 
 function CancelOrder({ orderId }: { orderId: string }) {
   const qc = useQueryClient();
+  const { show, modal } = useFeedback();
   const cancel = useMutation({
     mutationFn: () => cancelOrder(orderId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['trading-order', orderId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['trading-order', orderId] });
+      show({ kind: 'success', title: 'Cancellation requested', message: 'The order is being cancelled. Check the order status for confirmation.' });
+    },
+    onError: (e) => show({ kind: 'error', title: 'Order not cancelled', message: e instanceof ApiError ? e.message : 'Could not cancel this order. Please try again.' }),
   });
   return (
-    <Pressable onPress={() => cancel.mutate()} disabled={cancel.isPending} accessibilityLabel="Cancel order"
-      style={{ marginTop: 14, alignItems: 'center', paddingVertical: 13, borderRadius: 12, borderWidth: 1, borderColor: '#F04438', opacity: cancel.isPending ? 0.6 : 1 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#F04438' }}>{cancel.isPending ? 'Cancelling…' : 'Cancel order'}</Text>
-    </Pressable>
+    <>
+      <Pressable onPress={() => cancel.mutate()} disabled={cancel.isPending} accessibilityLabel="Cancel order"
+        style={{ marginTop: 14, alignItems: 'center', paddingVertical: 13, borderRadius: 12, borderWidth: 1, borderColor: '#F04438', opacity: cancel.isPending ? 0.6 : 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: '700', color: '#F04438' }}>{cancel.isPending ? 'Cancelling…' : 'Cancel order'}</Text>
+      </Pressable>
+      {modal}
+    </>
   );
 }

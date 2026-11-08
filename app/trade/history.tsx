@@ -8,6 +8,8 @@ import { useOrders, OPEN_ORDER_STATUSES } from '../../src/services/trades';
 import { useAssets } from '../../src/services/wallets';
 import { formatAtomic } from '../../src/lib/money';
 import { LoadingState, EmptyState, ErrorState } from '../../src/components/states';
+import { elevation } from '../../src/theme/elevation';
+import { ScreenHeader } from '../../src/components/screen-header';
 
 const STATUS: Record<string, { label: string; color: string }> = {
   quoted: { label: 'Quoted', color: '#F79009' }, reserved: { label: 'Reserved', color: '#F79009' },
@@ -16,7 +18,7 @@ const STATUS: Record<string, { label: string; color: string }> = {
   filled: { label: 'Filled', color: '#12B76A' }, settling: { label: 'Settling', color: '#F79009' },
   pending_review: { label: 'In review', color: '#F79009' }, cancellation_pending: { label: 'Cancelling', color: '#F79009' },
   completed: { label: 'Completed', color: '#12B76A' }, rejected: { label: 'Rejected', color: '#F04438' },
-  cancelled: { label: 'Cancelled', color: '#667085' }, failed: { label: 'Failed', color: '#F04438' },
+  cancelled: { label: 'Cancelled', color: '#758780' }, failed: { label: 'Failed', color: '#F04438' },
 };
 
 
@@ -33,12 +35,12 @@ export default function TradeHistory() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
-      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={async () => { await d.refetch(); }} tintColor="#00B894" />} contentContainerStyle={{ padding: 20 }}>
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.5 }}>Orders</Text>
+      <ScreenHeader title="Trade activity" subtitle="Track open and completed orders" />
+      <ScrollView refreshControl={<RefreshControl refreshing={d.isRefetching} onRefresh={async () => { await d.refetch(); }} tintColor="#00B887" />} contentContainerStyle={{ padding: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
           {[['open', 'Open'], ['closed', 'History']].map(([k, l]) => (
             <Pressable key={k} onPress={() => setTab(k as 'open' | 'closed')} accessibilityState={{ selected: tab === k }}
-              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: tab === k ? '#101B2D' : colors.surface, borderWidth: 1, borderColor: tab === k ? '#101B2D' : colors.border }}>
+              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: tab === k ? '#10231F' : colors.surface, borderWidth: 1, borderColor: tab === k ? '#10231F' : colors.border }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: tab === k ? '#fff' : colors.text }}>{l}</Text>
             </Pressable>
           ))}
@@ -51,7 +53,7 @@ export default function TradeHistory() {
               const inA = o.side === 'buy' ? fiat : base; const outA = o.side === 'buy' ? base : fiat;
               return (
                 <Pressable key={o.orderId} onPress={() => router.push(`/trade/${o.orderId}` as never)}
-                  style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 14 }}>
+                  style={{ borderRadius: 18, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 16, ...elevation.surface }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View>
                       <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }}>{o.side.toUpperCase()} {o.pairId.toUpperCase()}</Text>

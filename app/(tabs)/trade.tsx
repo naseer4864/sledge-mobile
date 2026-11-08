@@ -1,5 +1,3 @@
-import { Redirect } from 'expo-router';
+import TradeScreen from '../trade/index';
 
-export default function TradeTab() {
-  return <Redirect href="/trade" />;
-}
+export default TradeScreen;

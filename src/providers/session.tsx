@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { me, login as svcLogin, logout as svcLogout, register as svcRegister, type User } from '../services/auth';
+import { me, login as svcLogin, logout as svcLogout, register as svcRegister, verifyEmailCode as svcVerifyEmailCode, type User } from '../services/auth';
 import { registerForPush, unregisterForLogout } from '../services/push';
 import { getTokens, setTokens } from '../services/api';
 
@@ -14,6 +14,7 @@ interface SessionCtx {
   state: State;
   login: (email: string, password: string) => Promise<void>;
   register: (body: Parameters<typeof svcRegister>[0]) => Promise<void>;
+  completeEmailVerification: (code: string) => Promise<void>;
   completeMfa: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -21,7 +22,7 @@ interface SessionCtx {
 
 const Ctx = createContext<SessionCtx>({
   state: { kind: 'loading' },
-  login: async () => {}, register: async () => {}, completeMfa: async () => {}, logout: async () => {}, refresh: async () => {},
+  login: async () => {}, register: async () => {}, completeEmailVerification: async () => {}, completeMfa: async () => {}, logout: async () => {}, refresh: async () => {},
 });
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -49,6 +50,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (res && typeof res === 'object' && 'accessToken' in res && 'refreshToken' in res) {
         await me().then((user) => setState({ kind: 'authenticated', user }));
       }
+    },
+    completeEmailVerification: async (code) => {
+      const user = await svcVerifyEmailCode(code);
+      setState({ kind: 'authenticated', user });
+      registerForPush().catch(() => {});
     },
     completeMfa: async (accessToken, refreshToken) => {
       

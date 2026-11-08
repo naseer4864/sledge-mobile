@@ -52,10 +52,10 @@ describe('notifications', () => {
 
 describe('support tickets', () => {
   it('list + create + reply routes', async () => {
-    mockFetch.mockResolvedValueOnce(json(200, { tickets: [{ ticketId: 't1', subject: 'Help', status: 'open' }] }));
+    mockFetch.mockResolvedValueOnce(json(200, { items: [{ ticketId: 't1', subject: 'Help', status: 'open' }] }));
     expect((await tickets())[0].subject).toBe('Help');
-    mockFetch.mockResolvedValueOnce(json(201, { ticketId: 't2', subject: 'New', status: 'open' }));
-    await createTicket('New issue', 'Description here', 'payments', 'idem-t');
+    mockFetch.mockResolvedValueOnce(json(201, { action: 'created', ticket: { ticketId: 't2', subject: 'New', status: 'open' } }));
+    expect((await createTicket('New issue', 'Description here', 'payments', 'idem-t')).ticketId).toBe('t2');
     expect(String(mockFetch.mock.calls[1][0])).toContain('/support/tickets');
     mockFetch.mockResolvedValueOnce(json(200, {}));
     await replyTicket('t1', 'Reply body');
@@ -68,12 +68,12 @@ describe('support tickets', () => {
 
 describe('live chat', () => {
   it('conversations + messages + send routes', async () => {
-    mockFetch.mockResolvedValueOnce(json(200, { conversations: [{ conversationId: 'c1', status: 'open' }] }));
-    expect((await conversations())[0].status).toBe('open');
-    mockFetch.mockResolvedValueOnce(json(200, { messages: [{ body: 'hi', role: 'customer' }] }));
+    mockFetch.mockResolvedValueOnce(json(200, { items: [{ conversationId: 'c1', status: 'waiting' }] }));
+    expect((await conversations())[0].status).toBe('waiting');
+    mockFetch.mockResolvedValueOnce(json(200, { items: [{ body: 'hi', senderType: 'customer' }] }));
     expect((await messages('c1'))[0].body).toBe('hi');
-    mockFetch.mockResolvedValueOnce(json(200, { body: 'Hello', role: 'customer' }));
-    await sendMessage('c1', 'Hello');
+    mockFetch.mockResolvedValueOnce(json(200, { action: 'sent', message: { body: 'Hello', senderType: 'customer' } }));
+    expect((await sendMessage('c1', 'Hello')).body).toBe('Hello');
     expect(String(mockFetch.mock.calls[2][0])).toContain('/messages');
   });
 });

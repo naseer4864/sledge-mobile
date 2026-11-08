@@ -52,7 +52,8 @@ export interface RequestOpts { method?: string; body?: unknown; schema?: z.ZodTy
 
 export async function api<T = unknown>(path: string, opts: RequestOpts = {}): Promise<T> {
   const { accessToken } = await getTokens();
-  const headers: Record<string, string> = { 'content-type': 'application/json', 'x-request-id': Crypto.randomUUID() };
+  const headers: Record<string, string> = { 'x-request-id': Crypto.randomUUID() };
+  if (opts.body !== undefined) headers['content-type'] = 'application/json';
   if (accessToken && !opts.skipAuth) headers.authorization = `Bearer ${accessToken}`;
 
   const attempt = (tok?: string) => {

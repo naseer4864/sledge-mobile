@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AuthScreen } from '../../src/components/auth/screen';
-import { Button } from '../../src/components/ui/button';
+import { AuthBackLink } from '../../src/components/auth/back-link';
 import { useSession } from '../../src/providers/session';
 
 // Backend gap: customer login returns { mfaRequired, mfaTicket } but no /auth/mfa/verify
@@ -17,9 +17,9 @@ export default function Mfa() {
           </Text>
         </View>
         {state.kind === 'mfa' && (
-          <Text style={{ fontSize: 12, color: '#667085' }}>A pending authentication session exists — signing out will clear it.</Text>
+          <Text style={{ fontSize: 12, color: '#758780' }}>A pending authentication session exists — signing out will clear it.</Text>
         )}
-        <Button label="Back to sign in" variant="outline" onPress={() => router.replace('/(auth)/login')} />
+        <AuthBackLink label="Back to sign in" onPress={() => router.replace('/(auth)/login' as never)} />
       </View>
     </AuthScreen>
   );

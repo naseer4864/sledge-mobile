@@ -3,27 +3,33 @@ import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Copy, Landmark } from 'lucide-react-native';
+import { Copy, Landmark } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTheme } from '../../src/providers/theme';
 import { useBankingAccounts, provisionAccount } from '../../src/services/fiat';
 import { Button } from '../../src/components/ui/button';
+import { elevation } from '../../src/theme/elevation';
 import { LoadingState, ErrorState } from '../../src/components/states';
 import { ApiError } from '../../src/services/api';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 export default function ReceiveNgn() {
   const { colors } = useTheme();
   const qc = useQueryClient();
   const a = useBankingAccounts();
   const [, setCopied] = useState('');
-  const [err, setErr] = useState('');
+  const { show, modal } = useFeedback();
 
   const account = a.data?.find((x) => x.status === 'active') ?? a.data?.[0];
   const provision = useMutation({
     mutationFn: () => provisionAccount(Crypto.randomUUID()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['banking-accounts'] }),
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Could not create an account'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['banking-accounts'] });
+      show({ kind: 'success', title: 'NGN account requested', message: 'Your account details will appear here once provisioning is complete.' });
+    },
+    onError: (e) => show({ kind: 'error', title: 'Account not created', message: e instanceof ApiError ? e.message : 'Could not create an account. Please try again.' }),
   });
 
   const share = async (label: string, value: string) => { try { await Share.share({ message: value }); setCopied(label); setTimeout(() => setCopied(''), 1500); } catch {} };
@@ -36,20 +42,16 @@ export default function ReceiveNgn() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopFade />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-        <Pressable accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))} style={{ padding: 6 }}><ArrowLeft size={20} color="#fff" /></Pressable>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>Receive NGN</Text>
-      </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
+      <ScreenHeader title="Receive NGN" subtitle="Your Nigerian bank transfer details" />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
         {!account ? (
           <View style={{ alignItems: 'center', paddingTop: 32, gap: 14 }}>
             <Landmark size={40} color={colors.textMuted} />
             <Text style={{ fontSize: 15, color: colors.textMuted, textAlign: 'center' }}>No virtual NGN account yet.{'\n'}Create one to receive bank transfers.</Text>
             <Button label="Create NGN account" size="lg" loading={provision.isPending} onPress={() => provision.mutate()} />
-            {err ? <Text style={{ fontSize: 13, color: '#F04438' }}>{err}</Text> : null}
           </View>
         ) : (
-          <View style={{ borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: 18 }}>
+          <View style={{ borderRadius: 20, borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: colors.surface, padding: 18, ...elevation.surface }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase' }}>Your NGN account</Text>
               <Text style={{ fontSize: 11, fontWeight: '600', color: account.status === 'active' ? '#12B76A' : '#F79009', textTransform: 'uppercase' }}>{account.status}</Text>
@@ -80,6 +82,7 @@ export default function ReceiveNgn() {
           ))}
         </View>
       </ScrollView>
+      {modal}
     </SafeAreaView>
   );
 }

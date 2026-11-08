@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AuthScreen } from '../../src/components/auth/screen';
+import { AuthBackLink } from '../../src/components/auth/back-link';
 import { Input } from '../../src/components/ui/input';
 import { Button } from '../../src/components/ui/button';
 import { forgotPassword } from '../../src/services/auth';
 import { ApiError } from '../../src/services/api';
 import { z } from 'zod';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 export default function ForgotPassword() {
+  const { show, modal } = useFeedback();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -17,8 +20,12 @@ export default function ForgotPassword() {
   const submit = async () => {
     if (!z.string().email().safeParse(email).success) { setErr('Enter a valid email'); return; }
     setErr(''); setBusy(true);
-    try { await forgotPassword(email); setSent(true); }
-    catch (e) { setErr(e instanceof ApiError ? e.message : 'Request failed'); }
+    try {
+      await forgotPassword(email);
+      setSent(true);
+      show({ kind: 'success', title: 'Check your email', message: 'If the address is registered, a password reset link is on its way.' });
+    }
+    catch (e) { show({ kind: 'error', title: 'Could not send reset link', message: e instanceof ApiError ? e.message : 'Request failed. Please try again.' }); }
     finally { setBusy(false); }
   };
 
@@ -36,9 +43,8 @@ export default function ForgotPassword() {
             <Button label="Send reset link" size="lg" loading={busy} onPress={submit} />
           </>
         )}
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never))}>
-          <Text style={{ textAlign: 'center', color: '#00B894', fontSize: 14 }}>Back to sign in</Text>
-        </Pressable>
+        <AuthBackLink label="Back to sign in" onPress={() => router.replace('/(auth)/login' as never)} />
+        {modal}
       </View>
     </AuthScreen>
   );

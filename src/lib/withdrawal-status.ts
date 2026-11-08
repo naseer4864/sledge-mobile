@@ -10,6 +10,6 @@ export const WITHDRAWAL_STATUS: Record<string, { label: string; color: string; n
   completed: { label: 'Completed', color: '#12B76A' },
   failed: { label: 'Failed', color: '#F04438', note: 'The transfer failed.' },
   rejected: { label: 'Rejected', color: '#F04438', note: 'The request was declined.' },
-  cancelled: { label: 'Cancelled', color: '#667085' },
+  cancelled: { label: 'Cancelled', color: '#758780' },
   reconciliation_required: { label: 'Reconciling', color: '#F79009', note: 'Outcome being reconciled — no action needed.' },
 };

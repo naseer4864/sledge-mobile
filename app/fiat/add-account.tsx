@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, CheckCircle2, ChevronRight, Clock3, Search, XCircle } from 'lucide-react-native';
+import { CheckCircle2, ChevronRight, Clock3, Search, XCircle } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTheme } from '../../src/providers/theme';
@@ -12,6 +12,8 @@ import { Input } from '../../src/components/ui/input';
 import { Button } from '../../src/components/ui/button';
 import { LoadingState, EmptyState, ErrorState } from '../../src/components/states';
 import { ApiError } from '../../src/services/api';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { useFeedback } from '../../src/components/ui/feedback-modal';
 
 type Step = 'bank' | 'number' | 'confirm' | 'done';
 
@@ -27,16 +29,20 @@ export default function AddBankAccount() {
   const [savedStatus, setSavedStatus] = useState('');
   const [err, setErr] = useState('');
   const [idem] = useState(() => Crypto.randomUUID()); // one idempotency key per flow instance — safe retries, no double-save
+  const { show, modal } = useFeedback();
 
   const resolve = useMutation({
     mutationFn: () => resolveAccount(bank!.code, accountNumber),
     onSuccess: (r) => { setResolution(r); setStep('confirm'); },
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Could not look up the account name'),
+    onError: (e) => show({ kind: 'error', title: 'Account lookup failed', message: e instanceof ApiError ? e.message : 'Could not look up the account name. Check the details and try again.' }),
   });
   const save = useMutation({
     mutationFn: () => saveAccount({ resolutionId: resolution!.resolutionId, confirmedAccountName: resolution!.accountName, idempotencyKey: idem }),
-    onSuccess: (a) => { setSavedStatus(a.status); setStep('done'); qc.invalidateQueries({ queryKey: ['saved-bank-accounts'] }); },
-    onError: (e) => setErr(e instanceof ApiError ? e.message : 'Could not save the account'),
+    onSuccess: (a) => {
+      setSavedStatus(a.status); setStep('done'); qc.invalidateQueries({ queryKey: ['saved-bank-accounts'] });
+      show({ kind: a.status === 'verification_failed' ? 'error' : 'success', title: a.status === 'verified' ? 'Bank account verified' : a.status === 'verification_failed' ? 'Verification failed' : 'Account submitted', message: a.status === 'verified' ? 'You can now use this account for NGN withdrawals.' : a.status === 'verification_failed' ? 'We could not verify this account. Check the details before trying again.' : 'Your account is saved and undergoing verification.' });
+    },
+    onError: (e) => show({ kind: 'error', title: 'Account not saved', message: e instanceof ApiError ? e.message : 'Could not save the account. Please try again.' }),
   });
 
   const isExpired = () => !!resolution && new Date(resolution.expiresAt).getTime() <= Date.now(); // checked at press-time, not render (impure-call rule)
@@ -44,14 +50,15 @@ export default function AddBankAccount() {
     (!query || b.name.toLowerCase().includes(query.toLowerCase())) && b.active !== false);
 
   const header = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 }}>
-      <Pressable accessibilityLabel="Back" onPress={() => {
+    <ScreenHeader
+      title={step === 'bank' ? 'Add bank account' : step === 'number' ? 'Account number' : 'Confirm account'}
+      subtitle={step === 'bank' ? 'Choose your bank' : step === 'number' ? 'Enter your NUBAN account number' : 'Check the details before saving'}
+      onBack={() => {
         if (step === 'number') { setStep('bank'); setErr(''); return; }
         if (step === 'confirm') { setStep('number'); setResolution(null); setErr(''); return; }
         if (router.canGoBack()) router.back(); else router.replace('/fiat/accounts' as never);
-      }} style={{ padding: 6 }}><ArrowLeft size={20} color={colors.text} /></Pressable>
-      <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text }}>Add bank account</Text>
-    </View>
+      }}
+    />
   );
 
   return (
@@ -142,6 +149,7 @@ export default function AddBankAccount() {
           </View>
         )}
       </KeyboardAvoidingView>
+      {modal}
     </SafeAreaView>
   );
 }
